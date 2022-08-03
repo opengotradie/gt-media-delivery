@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description:
+  Media Distribution Infrastructure
+
+Parameters:
+  S3BucketLocation:
+    Type: String
+    Description: Name of the S3 bucket where the code is stored.
+  CodeArtifactName:
+    Type: String
+    Description: Name of the zip file where the code is stored 
+  FormattedCurrentBranch:
+    Type: String
+    Description: Name of the S3 bucket where the code is stored.
+  BranchAlias:
+    Type: String
+    Description: Name of the S3 bucket where the code is stored.
+  StageName:
+    Type: String
+    Description: Name of the API file
+  ImageBucketOrigin:
+    Type: String
+    Description: Name of the Image Bucket Origin
+  AlternateDomain:
+    Type: String
+    Description: Name of the Alternate Domain
+  AlternateDomainCertificateArn:
+    Type: String
+    Description: Arn of the Alternate Domain Certificate
+  BucketOriginAccessIdentity:
+    Type: String
+    Description: Bucket Origin Access Identity
+    
+
+Transform: AWS::Serverless-2016-10-31
+Resources:
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Aliases: 
+        - !Ref AlternateDomain
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AlternateDomainCertificateArn
+          SslSupportMethod: 'sni-only'
+        Origins:
+        - Id: !Ref ImageBucketOrigin
+          DomainName: !Ref ImageBucketOrigin
+          S3OriginConfig:
+            OriginAccessIdentity: !Ref BucketOriginAccessIdentity
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: 
+          - GET
+          - OPTIONS
+          - HEAD
+          ForwardedValues:
+            QueryString: true
+          LambdaFunctionAssociations:
+          - EventType: viewer-request
+            LambdaFunctionARN: !Ref MediaManagementAuthLambda.Version 
+          - EventType: origin-response
+            LambdaFunctionARN: !Ref MediaManagementOriginResponseLambda.Version
+          - EventType: viewer-response
+            LambdaFunctionARN: !Ref MediaManagementViewResponseLambda.Version
+          TargetOriginId: !Ref ImageBucketOrigin
+    
+  MediaManagementLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com, edgelambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: logingpolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ['logs:*']
+                Resource: 'arn:aws:logs:*:*:*'
+
+  MediaManagementAuthLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Media Management Auth Lambda
+      AutoPublishAlias: live
+      Runtime: python3.9
+      Handler: handlers/auth_handler.auth
+      CodeUri: 
+        Bucket: !Ref S3BucketLocation
+        Key: !Ref CodeArtifactName
+      Role: !GetAtt MediaManagementLambdaRole.Arn
+
+  MediaManagementViewResponseLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Media Management View Response Lambda
+      AutoPublishAlias: live
+      Runtime: python3.9
+      Handler: handlers/view_response_handler.handle
+      CodeUri: 
+        Bucket: !Ref S3BucketLocation
+        Key: !Ref CodeArtifactName
+      Role: !GetAtt MediaManagementLambdaRole.Arn  
+
+
+  MediaManagementOriginResponseLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Media Management Origin Response Lambda
+      AutoPublishAlias: live
+      Runtime: python3.9
+      Handler: handlers/origin_response_handler.handle
+      CodeUri: 
+        Bucket: !Ref S3BucketLocation
+        Key: !Ref CodeArtifactName
+      Role: !GetAtt MediaManagementLambdaRole.Arn 

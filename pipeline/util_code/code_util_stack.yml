@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description:
+  Build utilities stack
+
+Parameters:
+  CodeBucketName:
+    Type: String
+    Description: The name of the bucket where the code will be stored temporarily
+  APICodeBucketName:
+    Type: String
+    Description: The name of the bucket where the code will be stored temporarily
+  CurrentBranch:
+    Type: String
+    Description: Name of the branch thats getting deployed
+
+Resources:
+  CodeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref CodeBucketName
+      Tags:
+        - 
+          Key: "branch"
+          Value: !Sub ${CurrentBranch}
+  
+  APICodeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref APICodeBucketName
+      Tags:
+        - 
+          Key: "branch"
+          Value: !Sub ${CurrentBranch}

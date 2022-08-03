@@ -1,0 +1,31 @@
+  
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 10
+      python: 3.8
+  pre_build:
+    commands:
+      - bash pipeline/codebuild_branch.sh
+      # Checking the default branch
+      - echo $CODEBUILD_GIT_BRANCH
+      # Setting up python environment
+      - pip install virtualenv
+      - virtualenv .env
+      - source .env/bin/activate
+      - pip install -r pipeline/requirements-dev.txt
+      # Test Python
+      - pytest tests
+
+  build:
+    commands:
+      - python --version
+      - rm -rf package
+      - mkdir -p package/tempcode
+      - cp -R gtmedia package/tempcode/
+      - cp -R handlers package/tempcode/
+      - cp pipeline/requirements.txt package/tempcode/requirements.txt
+      - pip install -t package/tempcode -r package/tempcode/requirements.txt
+      - python pipeline/pipeline.py -s deploy 
