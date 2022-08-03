@@ -1,9 +1,5 @@
 
-redirection_rules_map = {'images-100x107': 'images', 'images-123x173': 'images', 'images-124x124': 'images', 'images-126x98': 'images',
- 'images-151x107': 'images', 'images-163x277': 'images', 'images-168x235': 'images', 'images-255x95': 'images',
- 'images-305x186': 'images', 'images-375x666': 'images', 'images-52x52': 'images', 'images-79x134': 'images',
- 'images-83x95': 'images', 'profile-150x150': 'profile', 'profile-20x20': 'profile', 'profile-30x30': 'profile',
- 'profile-50x50': 'profile', 'profile-58x58': 'profile', 'profile-70x70': 'profile'}
+redirection_rules_map = {'images-100x100': 'images',  'profile-70x70': 'profile'}
 
 HTTP_STATUS_FORBIDDEN = '403'
 HTTP_STATUS_MOVED = '301'
