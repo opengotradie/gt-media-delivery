@@ -24,6 +24,4 @@ phases:
       - mkdir -p package/tempcode
       - cp -R gtmedia package/tempcode/
       - cp -R handlers package/tempcode/
-      - cp pipeline/requirements.txt package/tempcode/requirements.txt
-      - pip install -t package/tempcode -r package/tempcode/requirements.txt
       - python pipeline/pipeline.py -s deploy 
